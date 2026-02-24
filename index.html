@@ -1,25 +1,26 @@
+
 <!doctype html>
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>財務諸表分析 RPG + 苦手攻略</title>
+  <title>財務諸表分析指標 RPG</title>
   <style>
-    /* 勘定科目アプリのスタイルを完全継承 */
     :root{
       --border:#ddd; --border2:#ccc; --text-muted:#666;
       --ok:#0a7; --ng:#c33; --radius:14px;
-      --asset-bg: #eef6ff; --asset-bd:#b7d7ff; /* BS項目用 */
-      --exp-bg:   #fff7e6; --exp-bd:#ffd08a; /* PL項目用 */
-      --other-bg: #f5f5f5; --other-bd:#d9d9d9; /* 記号用 */
+      /* 勘定科目アプリの色分けを移植 */
+      --asset-bg: #eef6ff; --asset-bd:#b7d7ff; /* BS項目 */
+      --exp-bg:   #fff7e6; --exp-bd:#ffd08a; /* PL項目 */
+      --other-bg: #f5f5f5; --other-bd:#d9d9d9; /* 記号 */
     }
 
-    body { font-family: sans-serif; max-width: 920px; margin: 24px auto; padding: 0 12px; background-color: #f9f9f9; }
+    body { font-family: sans-serif; max-width: 920px; margin: 24px auto; padding: 0 12px; background-color: #f9f9f9; color: #333; }
     .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; }
     .muted { color: var(--text-muted); font-size: 14px; }
-    .big { font-size: 28px; font-weight: 800; margin: 10px 0 14px; line-height:1.2; color: #333; }
+    .big { font-size: 32px; font-weight: 800; margin: 10px 0 20px; color: #000; text-align: center; }
     
-    /* ステータスバー（勘定科目アプリのデザイン） */
+    /* ステータスバー（勘定科目アプリの動くグラデーションを完全移植） */
     .status-bar { 
       display: flex; align-items: center; gap: 16px; 
       margin-bottom: 20px; padding: 16px; border-radius: 12px;
@@ -34,125 +35,155 @@
 
     /* 計算式表示エリア */
     .formula-display {
-      min-height: 50px; background: #f0f0f0; border-radius: 8px;
-      padding: 10px; display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 15px;
+      min-height: 60px; background: #f8f9fa; border: 2px inset #eee; border-radius: 10px;
+      padding: 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: center; margin-bottom: 20px;
     }
-    .token { background: #fff; border: 1px solid #ccc; padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+    .token { background: #fff; border: 1px solid #999; padding: 6px 12px; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
     /* ボタンのグリッド */
-    .grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); margin-top: 16px; }
-    .typeBtn { padding: 12px 8px; font-size: 14px; font-weight: 700; border-radius: 10px; border: 1px solid var(--border2); cursor: pointer; background: #fff; }
+    .grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); margin-top: 20px; }
+    .typeBtn { padding: 14px 8px; font-size: 14px; font-weight: 800; border-radius: 12px; border: 2px solid var(--border2); cursor: pointer; background: #fff; transition: 0.1s; }
+    .typeBtn:active { transform: translateY(2px); filter: brightness(0.9); }
+    
     .btn-bs { background-color: var(--asset-bg) !important; border-color: var(--asset-bd) !important; color: #004488; }
     .btn-pl { background-color: var(--exp-bg) !important; border-color: var(--exp-bd) !important; color: #884400; }
     .btn-op { background-color: var(--other-bg) !important; border-color: var(--other-bd) !important; }
 
-    /* モーダル */
-    #mistakeModal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.5); z-index: 100; padding: 20px; box-sizing: border-box; }
-    .modal-content { background: #fff; max-width: 600px; margin: 40px auto; padding: 24px; border-radius: 16px; }
+    .actionBtn { padding: 10px 16px; font-weight: 700; border-radius: 10px; border: 1px solid var(--border2); background: #fff; cursor: pointer; }
+    
+    #result { text-align: center; font-size: 20px; font-weight: bold; min-height: 1.5em; margin: 10px 0; }
 
-    .actionBtn { padding: 10px 16px; font-weight: 700; border-radius: 14px; border: 1px solid var(--border2); background: #fff; cursor: pointer; }
+    /* 初期入力モーダル */
+    #startModal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-card { background: #fff; padding: 30px; border-radius: 20px; text-align: center; width: 80%; max-width: 400px; }
   </style>
 </head>
 <body>
 
-  <div style="margin-bottom:10px;">
-    <h1 style="margin:0;">財務諸表分析指標 RPG</h1>
-    <span class="small">正しい計算式の順にボタンをタップしよう！</span>
+<div id="startModal">
+  <div class="modal-card">
+    <h2 id="modalTitle">名前を入力してください</h2>
+    <p class="muted">分析の冒険が始まります</p>
+    <input type="text" id="initialNameInput" style="width:90%; padding:12px; font-size:18px; border:2px solid #ddd; border-radius:10px; margin-bottom:20px;">
+    <br>
+    <button onclick="saveAndStart()" class="actionBtn" style="background:#333; color:#fff; width:100%; padding:14px;">開始する</button>
   </div>
+</div>
 
-  <div class="card">
-    <div class="status-bar">
-      <div class="char-icon" id="charIcon">🥚</div>
-      <div class="char-info" style="flex:1">
-        <input type="text" id="playerName" placeholder="名前を入力(必須)" onblur="lockNameTry()" style="font-size:16px; padding:6px; width:80%; border:2px solid #ccc; border-radius:6px;">
-        <div id="charName" style="font-weight:800; margin-top:4px;">Lv.1 分析のたまご</div>
-        <div id="charNext" class="muted" style="font-size:12px;"></div>
-      </div>
-      <div style="text-align:right;">
-        <div class="small">累計正解</div>
-        <div style="font-weight:800; font-size:18px;"><span id="totalAccumulated">0</span>問</div>
-      </div>
+<div class="card">
+  <div class="status-bar">
+    <div class="char-icon" id="charIcon">🥚</div>
+    <div style="flex:1">
+      <div id="displayName" style="font-weight:800; font-size:18px;">---</div>
+      <div id="charLevelName" style="font-weight:800; color:#555;">Lv.1 分析のたまご</div>
+      <div id="charNext" class="muted" style="font-size:11px;"></div>
     </div>
-
-    <div id="quizArea">
-      <div class="muted">この指標の計算式は？</div>
-      <div id="targetName" class="big">読み込み中...</div>
-      <div id="formulaDisplay" class="formula-display">
-        <span class="muted">ボタンを押して式を完成させてください</span>
-      </div>
-    </div>
-
-    <div class="toolbar" style="display:flex; gap:10px; margin-bottom:10px;">
-      <button class="actionBtn" onclick="undo()" style="border-color:#ccc;">1つ消す</button>
-      <button class="actionBtn" onclick="clearFormula()" style="color:#c33;">全部消す</button>
-      <button id="mistakeBtn" class="actionBtn" onclick="openMistakeModal()" style="display:none; color:#c33; background:#fff5f5;">⚠️ 苦手リスト (<span id="mistakeCount">0</span>)</button>
-    </div>
-
-    <div id="buttons" class="grid"></div>
-    <p id="result" style="margin-top:16px; font-weight:700; min-height:1.5em;"></p>
-
-    <div class="muted" style="border-top:1px solid #eee; padding-top:10px; display:flex; justify-content:space-between;">
-      <span>今回：<span id="correct">0</span> / <span id="count">0</span> 問正解</span>
-      <span>正解率: <span id="accuracy">0</span>%</span>
+    <div style="text-align:right;">
+      <div class="small">累計正解</div>
+      <div style="font-weight:800; font-size:20px;"><span id="totalAccumulated">0</span>問</div>
+      <button onclick="resetEverything()" class="muted" style="background:none; border:none; text-decoration:underline; cursor:pointer; padding:0; font-size:11px;">名前を変更・リセット</button>
     </div>
   </div>
 
-  <div id="mistakeModal">
-    <div class="modal-content">
-      <h3>📝 苦手リスト（間違えた指標）</h3>
-      <div id="mistakeListContainer" style="max-height:300px; overflow-y:auto; margin:15px 0;"></div>
-      <button class="actionBtn" onclick="closeMistakeModal()">閉じる</button>
-    </div>
+  <div id="quizArea">
+    <div class="muted" style="text-align:center;">正しい計算式を選んでください</div>
+    <div id="targetName" class="big">読み込み中...</div>
+    <div id="formulaDisplay" class="formula-display"></div>
   </div>
+
+  <div id="result"></div>
+
+  <div style="display:flex; gap:10px; justify-content: center;">
+    <button class="actionBtn" onclick="undo()">1つ消す</button>
+    <button class="actionBtn" onclick="clearFormula()" style="color:var(--ng);">全部リセット</button>
+  </div>
+
+  <div id="buttons" class="grid"></div>
+
+  <div class="muted" style="border-top:1px solid #eee; margin-top:20px; padding-top:12px; display:flex; justify-content:space-between;">
+    <span>今回：<span id="sessionScore">0</span> / <span id="sessionTotal">0</span> 問正解</span>
+    <span>正解率: <span id="accuracy">0</span>%</span>
+  </div>
+</div>
 
 <script>
-  // 問題データ
+  // 問題データ（代表的なもの）
   const QUESTIONS = [
-    { name: "ROE（自己資本利益率）", formula: ["当期純利益", "÷", "自己資本", "×100"], type: "収益性" },
-    { name: "流動比率", formula: ["流動資産", "÷", "流動負債", "×100"], type: "安全性" },
-    { name: "自己資本比率", formula: ["自己資本", "÷", "総資本", "×100"], type: "安全性" },
-    { name: "売上高総利益率", formula: ["売上総利益", "÷", "売上高", "×100"], type: "収益性" },
-    { name: "総資本回転率", formula: ["売上高", "÷", "総資本"], type: "効率性" }
+    { name: "ROE（自己資本利益率）", formula: ["当期純利益", "÷", "自己資本", "×100"] },
+    { name: "流動比率", formula: ["流動資産", "÷", "流動負債", "×100"] },
+    { name: "自己資本比率", formula: ["自己資本", "÷", "総資本", "×100"] },
+    { name: "売上高利益率", formula: ["当期純利益", "÷", "売上高", "×100"] },
+    { name: "総資本回転率", formula: ["売上高", "÷", "総資本"] },
+    { name: "固定比率", formula: ["固定資産", "÷", "自己資本", "×100"] }
   ];
 
-  // キャラクター定義（移植）
   const CHARACTERS = [
     { score: 0, icon: '🥚', name: 'Lv.1 分析のたまご' },
-    { score: 10, icon: '🐣', name: 'Lv.2 分析ピヨピヨ' },
-    { score: 30, icon: '🐥', name: 'Lv.3 かけだし分析官' },
-    { score: 60, icon: '🦉', name: 'Lv.4 財務の賢者' },
-    { score: 100, icon: '🐲', name: 'Lv.5 伝説の解析龍' }
+    { score: 5, icon: '🐣', name: 'Lv.2 分析ピヨピヨ' },
+    { score: 15, icon: '🐥', name: 'Lv.3 かけだし分析官' },
+    { score: 35, icon: '🦉', name: 'Lv.4 財務の賢者' },
+    { score: 70, icon: '🐲', name: 'Lv.5 伝説の解析龍' }
   ];
 
-  let currentTokens = [];
-  let currentIdx = 0;
-  let totalCorrect = 0;
-  let sessionCorrect = 0;
-  let sessionTotal = 0;
-  let mistakes = [];
+  let state = {
+    name: "",
+    totalCorrect: 0,
+    currentIdx: 0,
+    inputTokens: [],
+    sessionCorrect: 0,
+    sessionTotal: 0
+  };
 
-  // 初期化
   function init() {
-    loadProgress();
+    const savedName = localStorage.getItem('ratioRPG_name');
+    if (!savedName) {
+      document.getElementById('startModal').style.display = 'flex';
+    } else {
+      state.name = savedName;
+      state.totalCorrect = parseInt(localStorage.getItem('ratioRPG_score') || 0);
+      document.getElementById('displayName').textContent = state.name + " 殿";
+      buildButtons();
+      nextQuestion();
+      updateUI();
+    }
+  }
+
+  function saveAndStart() {
+    const val = document.getElementById('initialNameInput').value.trim();
+    if (!val) return alert("名前を入れてください");
+    state.name = val;
+    state.totalCorrect = 0; // 新規時は0
+    localStorage.setItem('ratioRPG_name', val);
+    localStorage.setItem('ratioRPG_score', 0);
+    document.getElementById('startModal').style.display = 'none';
+    document.getElementById('displayName').textContent = val + " 殿";
     buildButtons();
     nextQuestion();
     updateUI();
   }
 
+  function resetEverything() {
+    if (confirm("名前を変更すると、これまでのレベルと正解数も全てリセットされます。よろしいですか？")) {
+      localStorage.clear();
+      state.sessionCorrect = 0;
+      state.sessionTotal = 0;
+      location.reload();
+    }
+  }
+
   function buildButtons() {
-    const items = ["当期純利益", "自己資本", "流動資産", "流動負債", "売上高", "総資本", "売上総利益", "固定資産"];
+    const items = ["当期純利益", "自己資本", "流動資産", "流動負債", "売上高", "総資本", "固定資産"];
     const ops = ["＋", "－", "×", "÷", "（", "）", "×100"];
     const container = document.getElementById('buttons');
+    container.innerHTML = "";
     
-    // 財務項目ボタン
-    items.forEach(text => {
+    items.sort().forEach(text => {
       const btn = document.createElement('button');
       btn.className = 'typeBtn ' + (text.includes("利益") || text.includes("高") ? "btn-pl" : "btn-bs");
       btn.textContent = text;
       btn.onclick = () => addToken(text);
       container.appendChild(btn);
     });
-    // 演算子ボタン
     ops.forEach(text => {
       const btn = document.createElement('button');
       btn.className = 'typeBtn btn-op';
@@ -163,136 +194,74 @@
   }
 
   function addToken(t) {
-    if(!document.getElementById('playerName').readOnly) { alert("名前を入力してね！"); return; }
-    currentTokens.push(t);
+    state.inputTokens.push(t);
     renderFormula();
     checkAnswer();
   }
 
   function renderFormula() {
     const disp = document.getElementById('formulaDisplay');
-    if(currentTokens.length === 0) {
-      disp.innerHTML = '<span class="muted">ボタンを押して式を完成させてください</span>';
-      return;
-    }
-    disp.innerHTML = currentTokens.map(t => `<span class="token">${t}</span>`).join(' ');
+    disp.innerHTML = state.inputTokens.map(t => `<span class="token">${t}</span>`).join('');
   }
 
   function checkAnswer() {
-    const target = QUESTIONS[currentIdx].formula;
-    // 途中経過チェック
-    for(let i=0; i<currentTokens.length; i++) {
-      if(currentTokens[i] !== target[i]) {
-        // 不正解確定
+    const target = QUESTIONS[state.currentIdx].formula;
+    for (let i = 0; i < state.inputTokens.length; i++) {
+      if (state.inputTokens[i] !== target[i]) {
         handleResult(false);
         return;
       }
     }
-    // 全て一致
-    if(currentTokens.length === target.length) {
+    if (state.inputTokens.length === target.length) {
       handleResult(true);
     }
   }
 
   function handleResult(isOk) {
     const resEl = document.getElementById('result');
-    if(isOk) {
-      resEl.innerHTML = '<span class="ok" style="color:#0a7; font-size:20px;">⭕ 正解！</span>';
-      totalCorrect++; sessionCorrect++; sessionTotal++;
-      saveProgress();
-      setTimeout(nextQuestion, 800);
+    if (isOk) {
+      resEl.innerHTML = '<span style="color:var(--ok);">⭕ 正解！お見事！</span>';
+      state.totalCorrect++; state.sessionCorrect++; state.sessionTotal++;
+      localStorage.setItem('ratioRPG_score', state.totalCorrect);
+      setTimeout(nextQuestion, 1000);
     } else {
-      resEl.innerHTML = `<span class="ng" style="color:#c33;">❌ 間違え！ 正解は: ${QUESTIONS[currentIdx].formula.join(" ")}</span>`;
-      addMistake(QUESTIONS[currentIdx]);
-      sessionTotal++;
-      setTimeout(() => { clearFormula(); resEl.innerHTML = ""; }, 1500);
+      resEl.innerHTML = '<span style="color:var(--ng);">❌ 式が違います...</span>';
+      state.sessionTotal++;
+      setTimeout(() => { 
+        clearFormula(); 
+        resEl.innerHTML = ""; 
+      }, 1000);
     }
     updateUI();
   }
 
   function nextQuestion() {
-    currentIdx = Math.floor(Math.random() * QUESTIONS.length);
-    document.getElementById('targetName').textContent = QUESTIONS[currentIdx].name;
+    state.currentIdx = Math.floor(Math.random() * QUESTIONS.length);
+    document.getElementById('targetName').textContent = QUESTIONS[state.currentIdx].name;
     document.getElementById('result').innerHTML = "";
     clearFormula();
   }
 
-  function clearFormula() { currentTokens = []; renderFormula(); }
-  function undo() { currentTokens.pop(); renderFormula(); }
-
-  // --- システム・保存系（勘定科目アプリから移植） ---
-  function lockNameTry() {
-    const input = document.getElementById('playerName');
-    if(input.value.trim()) {
-      input.readOnly = true;
-      localStorage.setItem('analyst_playerName', input.value.trim());
-    }
-  }
-
-  function saveProgress() {
-    localStorage.setItem('analyst_totalCorrect', totalCorrect);
-    localStorage.setItem('analyst_mistakes', JSON.stringify(mistakes));
-  }
-
-  function loadProgress() {
-    totalCorrect = parseInt(localStorage.getItem('analyst_totalCorrect') || 0);
-    const savedName = localStorage.getItem('analyst_playerName');
-    if(savedName) {
-      const input = document.getElementById('playerName');
-      input.value = savedName; input.readOnly = true;
-    }
-    mistakes = JSON.parse(localStorage.getItem('analyst_mistakes') || "[]");
-    updateMistakeBtn();
-  }
+  function clearFormula() { state.inputTokens = []; renderFormula(); }
+  function undo() { state.inputTokens.pop(); renderFormula(); }
 
   function updateUI() {
-    document.getElementById('totalAccumulated').textContent = totalCorrect;
-    document.getElementById('correct').textContent = sessionCorrect;
-    document.getElementById('count').textContent = sessionTotal;
-    document.getElementById('accuracy').textContent = sessionTotal ? Math.round(sessionCorrect/sessionTotal*100) : 0;
+    document.getElementById('totalAccumulated').textContent = state.totalCorrect;
+    document.getElementById('sessionScore').textContent = state.sessionCorrect;
+    document.getElementById('sessionTotal').textContent = state.sessionTotal;
+    document.getElementById('accuracy').textContent = state.sessionTotal ? Math.round(state.sessionCorrect/state.sessionTotal*100) : 0;
 
     let chara = CHARACTERS[0];
-    for(let c of CHARACTERS) { if(totalCorrect >= c.score) chara = c; }
+    for (let c of CHARACTERS) { if (state.totalCorrect >= c.score) chara = c; }
     document.getElementById('charIcon').textContent = chara.icon;
-    document.getElementById('charName').textContent = chara.name;
+    document.getElementById('charLevelName').textContent = chara.name;
     
     const idx = CHARACTERS.indexOf(chara);
-    if(idx < CHARACTERS.length - 1) {
-      document.getElementById('charNext').textContent = `あと ${CHARACTERS[idx+1].score - totalCorrect} 問で進化`;
+    if (idx < CHARACTERS.length - 1) {
+      document.getElementById('charNext').textContent = `あと ${CHARACTERS[idx+1].score - state.totalCorrect} 問で進化`;
     } else {
-      document.getElementById('charNext').textContent = "MAX LEVEL";
+      document.getElementById('charNext').textContent = "マスター到達！";
     }
-  }
-
-  function addMistake(item) {
-    if(!mistakes.find(m => m.name === item.name)) {
-      mistakes.push(item);
-      updateMistakeBtn();
-      saveProgress();
-    }
-  }
-
-  function updateMistakeBtn() {
-    const btn = document.getElementById('mistakeBtn');
-    document.getElementById('mistakeCount').textContent = mistakes.length;
-    btn.style.display = mistakes.length > 0 ? "inline-block" : "none";
-  }
-
-  function openMistakeModal() {
-    const container = document.getElementById('mistakeListContainer');
-    container.innerHTML = mistakes.map(m => `
-      <div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
-        <div><b>${m.name}</b><br><small>正解: ${m.formula.join(" ")}</small></div>
-        <button onclick="removeMistake('${m.name}')" style="font-size:10px;">削除</button>
-      </div>
-    `).join('') || "なし";
-    document.getElementById('mistakeModal').style.display = 'block';
-  }
-
-  function closeMistakeModal() { document.getElementById('mistakeModal').style.display = 'none'; }
-  function removeMistake(name) {
-    mistakes = mistakes.filter(m => m.name !== name);
-    saveProgress(); updateMistakeBtn(); openMistakeModal();
   }
 
   init();
