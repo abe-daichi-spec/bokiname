@@ -3,23 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>財務諸表分析指標 RPG + 苦手攻略</title>
+  <title>財務諸表分析指標 RPG - 全指標収録版</title>
   <style>
     :root{
       --border:#ddd; --border2:#ccc; --text-muted:#666;
       --ok:#0a7; --ng:#c33; --radius:14px;
-      /* 勘定科目アプリの色分けを移植 */
-      --asset-bg: #eef6ff; --asset-bd:#b7d7ff; /* BS項目 */
-      --exp-bg:   #fff7e6; --exp-bd:#ffd08a; /* PL項目 */
-      --other-bg: #f5f5f5; --other-bd:#d9d9d9; /* 記号 */
+      --asset-bg: #eef6ff; --asset-bd:#b7d7ff;
+      --exp-bg:   #fff7e6; --exp-bd:#ffd08a;
+      --other-bg: #f5f5f5; --other-bd:#d9d9d9;
     }
 
     body { font-family: sans-serif; max-width: 920px; margin: 24px auto; padding: 0 12px; background-color: #f9f9f9; color: #333; }
     .card { border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; }
     .muted { color: var(--text-muted); font-size: 14px; }
-    .big { font-size: 32px; font-weight: 800; margin: 10px 0 20px; color: #000; text-align: center; }
+    .big { font-size: 28px; font-weight: 800; margin: 10px 0 20px; color: #000; text-align: center; line-height: 1.2; }
     
-    /* ステータスバー（動くグラデーション） */
     .status-bar { 
       display: flex; align-items: center; gap: 16px; 
       margin-bottom: 20px; padding: 16px; border-radius: 12px;
@@ -32,16 +30,14 @@
     .char-icon { font-size: 48px; line-height: 1; animation: bounce 2s infinite; }
     @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 
-    /* 計算式表示エリア */
     .formula-display {
       min-height: 60px; background: #f8f9fa; border: 2px inset #eee; border-radius: 10px;
-      padding: 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; justify-content: center; margin-bottom: 20px;
+      padding: 10px; display: flex; gap: 4px; flex-wrap: wrap; align-items: center; justify-content: center; margin-bottom: 10px;
     }
-    .token { background: #fff; border: 1px solid #999; padding: 6px 12px; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .token { background: #fff; border: 1px solid #999; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    /* ボタンのグリッド */
-    .grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); margin-top: 20px; }
-    .typeBtn { padding: 14px 8px; font-size: 14px; font-weight: 800; border-radius: 12px; border: 2px solid var(--border2); cursor: pointer; background: #fff; transition: 0.1s; }
+    .grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); margin-top: 20px; }
+    .typeBtn { padding: 12px 4px; font-size: 13px; font-weight: 800; border-radius: 10px; border: 2px solid var(--border2); cursor: pointer; background: #fff; transition: 0.1s; line-height: 1.2; }
     .typeBtn:active { transform: translateY(2px); filter: brightness(0.9); }
     
     .btn-bs { background-color: var(--asset-bg) !important; border-color: var(--asset-bd) !important; color: #004488; }
@@ -50,9 +46,8 @@
 
     .actionBtn { padding: 10px 16px; font-weight: 700; border-radius: 10px; border: 1px solid var(--border2); background: #fff; cursor: pointer; }
     
-    #result { text-align: center; font-size: 20px; font-weight: bold; min-height: 1.5em; margin: 10px 0; }
+    #result { text-align: center; font-size: 18px; font-weight: bold; min-height: 1.5em; margin-bottom: 5px; }
 
-    /* モーダル */
     .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; }
     .modal-card { background: #fff; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 500px; }
     .mistake-item { text-align: left; padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
@@ -92,14 +87,14 @@
   </div>
 
   <div id="quizArea">
-    <div class="muted" style="text-align:center;">正しい計算式を選んでください</div>
+    <div id="qCat" class="muted" style="text-align:center; font-weight: bold; color: var(--ok);"></div>
     <div id="targetName" class="big">読み込み中...</div>
     <div id="formulaDisplay" class="formula-display"></div>
   </div>
 
   <div id="result"></div>
 
-  <div style="display:flex; gap:10px; justify-content: center; margin-bottom: 10px;">
+  <div style="display:flex; gap:8px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap;">
     <button class="actionBtn" onclick="undo()">1つ消す</button>
     <button class="actionBtn" onclick="clearFormula()" style="color:var(--ng);">全部消す</button>
     <button class="actionBtn" onclick="skipQuestion()" style="color:var(--text-muted);">スキップ</button>
@@ -115,95 +110,80 @@
 </div>
 
 <script>
+  // CSVデータに基づく全17指標
   const QUESTIONS = [
-    { name: "ROE（自己資本利益率）", formula: ["当期純利益", "÷", "自己資本", "×100"] },
-    { name: "流動比率", formula: ["流動資産", "÷", "流動負債", "×100"] },
-    { name: "自己資本比率", formula: ["自己資本", "÷", "総資本", "×100"] },
-    { name: "売上高純利益率", formula: ["当期純利益", "÷", "売上高", "×100"] },
-    { name: "総資本回転率", formula: ["売上高", "÷", "総資本"] },
-    { name: "固定比率", formula: ["固定資産", "÷", "自己資本", "×100"] },
-    { name: "当座比率", formula: ["当座資産", "÷", "流動負債", "×100"] }
+    { cat: "収益性", name: "売上高総利益率", formula: ["売上総利益", "÷", "売上高", "×100"] },
+    { cat: "収益性", name: "売上高営業利益率", formula: ["営業利益", "÷", "売上高", "×100"] },
+    { cat: "収益性", name: "売上高経常利益率", formula: ["経常利益", "÷", "売上高", "×100"] },
+    { cat: "収益性", name: "売上高当期純利益率", formula: ["当期純利益", "÷", "売上高", "×100"] },
+    { cat: "収益性", name: "総資本利益率（ROA）", formula: ["当期純利益", "÷", "総資本", "×100"] },
+    { cat: "収益性", name: "自己資本利益率（ROE）", formula: ["当期純利益", "÷", "自己資本", "×100"] },
+    { cat: "安全性", name: "流動比率", formula: ["流動資産", "÷", "流動負債", "×100"] },
+    { cat: "安全性", name: "当座比率", formula: ["当座資産", "÷", "流動負債", "×100"] },
+    { cat: "安全性", name: "負債比率", formula: ["負債", "÷", "自己資本", "×100"] },
+    { cat: "安全性", name: "自己資本比率", formula: ["自己資本", "÷", "総資本", "×100"] },
+    { cat: "安全性", name: "固定比率", formula: ["固定資産", "÷", "自己資本", "×100"] },
+    { cat: "安全性", name: "固定長期適合率", formula: ["固定資産", "÷", "（", "固定負債", "＋", "自己資本", "）", "×100"] },
+    { cat: "成長性", name: "売上高成長率", formula: ["（", "当期売上高", "－", "前期売上高", "）", "÷", "前期売上高", "×100"] },
+    { cat: "効率性", name: "売上原価率", formula: ["売上原価", "÷", "売上高", "×100"] },
+    { cat: "効率性", name: "売上債権回転率", formula: ["売上高", "÷", "（", "受取手形", "＋", "売掛金", "）"] },
+    { cat: "効率性", name: "商品回転率", formula: ["売上高", "÷", "商品"] },
+    { cat: "効率性", name: "総資本回転率", formula: ["売上高", "÷", "総資本"] }
   ];
 
   const CHARACTERS = [
     { score: 0, icon: '🥚', name: 'Lv.1 分析のたまご' },
-    { score: 5, icon: '🐣', name: 'Lv.2 分析ピヨピヨ' },
-    { score: 15, icon: '🐥', name: 'Lv.3 かけだし分析官' },
-    { score: 35, icon: '🦉', name: 'Lv.4 財務の賢者' },
-    { score: 70, icon: '🐲', name: 'Lv.5 伝説の解析龍' }
+    { score: 10, icon: '🐣', name: 'Lv.2 分析ピヨピヨ' },
+    { score: 30, icon: '🐥', name: 'Lv.3 かけだし分析官' },
+    { score: 60, icon: '🦉', name: 'Lv.4 財務の賢者' },
+    { score: 100, icon: '🐲', name: 'Lv.5 伝説の解析龍' }
   ];
 
-  let state = {
-    name: "",
-    totalCorrect: 0,
-    currentIdx: 0,
-    inputTokens: [],
-    sessionCorrect: 0,
-    sessionTotal: 0,
-    mistakes: []
-  };
+  let state = { name: "", totalCorrect: 0, currentIdx: 0, inputTokens: [], sessionCorrect: 0, sessionTotal: 0, mistakes: [] };
 
   function init() {
     const savedName = localStorage.getItem('ratioRPG_name');
-    if (!savedName) {
-      document.getElementById('startModal').style.display = 'flex';
-    } else {
+    if (!savedName) { document.getElementById('startModal').style.display = 'flex'; } 
+    else {
       state.name = savedName;
       state.totalCorrect = parseInt(localStorage.getItem('ratioRPG_score') || 0);
       state.mistakes = JSON.parse(localStorage.getItem('ratioRPG_mistakes') || "[]");
       document.getElementById('displayName').textContent = state.name + " 殿";
-      buildButtons();
-      nextQuestion();
-      updateUI();
+      buildButtons(); nextQuestion(); updateUI();
     }
   }
 
   function saveAndStart() {
     const val = document.getElementById('initialNameInput').value.trim();
     if (!val) return alert("名前を入れてください");
-    localStorage.clear(); // 新規名前時は全てリセット
+    localStorage.clear();
     state.name = val;
-    state.totalCorrect = 0;
-    state.mistakes = [];
     localStorage.setItem('ratioRPG_name', val);
-    localStorage.setItem('ratioRPG_score', 0);
-    document.getElementById('startModal').style.display = 'none';
     location.reload();
   }
 
   function resetEverything() {
-    if (confirm("名前を変更すると、これまでのレベルと苦手リストも全てリセットされます。よろしいですか？")) {
-      localStorage.clear();
-      location.reload();
-    }
+    if (confirm("全てリセットされます。よろしいですか？")) { localStorage.clear(); location.reload(); }
   }
 
   function buildButtons() {
-    const items = ["当期純利益", "自己資本", "流動資産", "流動負債", "売上高", "総資本", "固定資産", "当座資産"];
-    const ops = ["＋", "－", "×", "÷", "（", "）", "×100"];
+    const plItems = ["売上総利益", "売上高", "営業利益", "経常利益", "当期純利益", "当期売上高", "前期売上高", "売上原価"];
+    const bsItems = ["自己資本", "総資本", "流動資産", "流動負債", "当座資産", "負債", "固定資産", "固定負債", "受取手形", "売掛金", "商品"];
+    const ops = ["＋", "－", "÷", "（", "）", "×100"];
     const container = document.getElementById('buttons');
     container.innerHTML = "";
     
-    items.sort().forEach(text => {
-      const btn = document.createElement('button');
-      btn.className = 'typeBtn ' + (text.includes("利益") || text.includes("高") ? "btn-pl" : "btn-bs");
-      btn.textContent = text;
-      btn.onclick = () => addToken(text);
-      container.appendChild(btn);
-    });
-    ops.forEach(text => {
-      const btn = document.createElement('button');
-      btn.className = 'typeBtn btn-op';
-      btn.textContent = text;
-      btn.onclick = () => addToken(text);
-      container.appendChild(btn);
-    });
+    plItems.sort().forEach(text => createBtn(text, 'btn-pl', container));
+    bsItems.sort().forEach(text => createBtn(text, 'btn-bs', container));
+    ops.forEach(text => createBtn(text, 'btn-op', container));
   }
 
-  function addToken(t) {
-    state.inputTokens.push(t);
-    renderFormula();
-    checkAnswer();
+  function createBtn(text, cls, container) {
+    const btn = document.createElement('button');
+    btn.className = 'typeBtn ' + cls;
+    btn.textContent = text;
+    btn.onclick = () => { state.inputTokens.push(text); renderFormula(); checkAnswer(); };
+    container.appendChild(btn);
   }
 
   function renderFormula() {
@@ -214,14 +194,9 @@
   function checkAnswer() {
     const target = QUESTIONS[state.currentIdx].formula;
     for (let i = 0; i < state.inputTokens.length; i++) {
-      if (state.inputTokens[i] !== target[i]) {
-        handleResult(false);
-        return;
-      }
+      if (state.inputTokens[i] !== target[i]) { handleResult(false); return; }
     }
-    if (state.inputTokens.length === target.length) {
-      handleResult(true);
-    }
+    if (state.inputTokens.length === target.length) { handleResult(true); }
   }
 
   function handleResult(isOk) {
@@ -235,26 +210,23 @@
       resEl.innerHTML = '<span style="color:var(--ng);">❌ 不正解...</span>';
       addMistake(QUESTIONS[state.currentIdx]);
       state.sessionTotal++;
-      setTimeout(() => { clearFormula(); resEl.innerHTML = ""; }, 1200);
+      setTimeout(() => { state.inputTokens = []; renderFormula(); resEl.innerHTML = ""; }, 1200);
     }
     updateUI();
   }
 
   function nextQuestion() {
     state.currentIdx = Math.floor(Math.random() * QUESTIONS.length);
+    document.getElementById('qCat').textContent = "〔" + QUESTIONS[state.currentIdx].cat + "分析〕";
     document.getElementById('targetName').textContent = QUESTIONS[state.currentIdx].name;
     document.getElementById('result').innerHTML = "";
-    clearFormula();
+    state.inputTokens = []; renderFormula();
   }
 
-  function skipQuestion() {
-    if(confirm("この問題をスキップしますか？")) nextQuestion();
-  }
-
+  function skipQuestion() { if(confirm("スキップしますか？")) nextQuestion(); }
   function clearFormula() { state.inputTokens = []; renderFormula(); }
   function undo() { state.inputTokens.pop(); renderFormula(); }
 
-  // 苦手リスト機能
   function addMistake(q) {
     if(!state.mistakes.some(m => m.name === q.name)) {
       state.mistakes.push(q);
@@ -274,12 +246,10 @@
   }
 
   function closeMistake() { document.getElementById('mistakeModal').style.display = 'none'; }
-
   function removeMistake(name) {
     state.mistakes = state.mistakes.filter(m => m.name !== name);
     localStorage.setItem('ratioRPG_mistakes', JSON.stringify(state.mistakes));
-    openMistake();
-    updateUI();
+    openMistake(); updateUI();
   }
 
   function updateUI() {
@@ -287,7 +257,6 @@
     document.getElementById('sessionScore').textContent = state.sessionCorrect;
     document.getElementById('sessionTotal').textContent = state.sessionTotal;
     document.getElementById('accuracy').textContent = state.sessionTotal ? Math.round(state.sessionCorrect/state.sessionTotal*100) : 0;
-    
     document.getElementById('mCount').textContent = state.mistakes.length;
     document.getElementById('mistakeBtn').style.display = state.mistakes.length > 0 ? "inline-block" : "none";
 
@@ -295,13 +264,8 @@
     for (let c of CHARACTERS) { if (state.totalCorrect >= c.score) chara = c; }
     document.getElementById('charIcon').textContent = chara.icon;
     document.getElementById('charLevelName').textContent = chara.name;
-    
     const idx = CHARACTERS.indexOf(chara);
-    if (idx < CHARACTERS.length - 1) {
-      document.getElementById('charNext').textContent = `あと ${CHARACTERS[idx+1].score - state.totalCorrect} 問で進化`;
-    } else {
-      document.getElementById('charNext').textContent = "マスター到達！";
-    }
+    document.getElementById('charNext').textContent = idx < CHARACTERS.length - 1 ? `あと ${CHARACTERS[idx+1].score - state.totalCorrect} 問で進化` : "マスター到達！";
   }
 
   init();
