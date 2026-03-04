@@ -94,7 +94,7 @@
     { cat: "成長性", name: "売上高成長率", formula: ["（", "当期売上高", "－", "前期売上高", "）", "÷", "前期売上高", "×100"] },
     { cat: "効率性", name: "売上原価率", formula: ["売上原価", "÷", "売上高", "×100"] },
     { cat: "効率性", name: "売上債権回転率", formula: ["売上高", "÷", "（", "受取手形", "＋", "売掛金", "）"] },
-    { cat: "効率性", name: "商品回転率", formula: ["売上高", "÷", "商品"] },
+    { cat: "効率性", name: "商品回転率", formula: ["売上原価", "÷", "商品"] },
     { cat: "効率性", name: "総資本回転率", formula: ["売上高", "÷", "総資本"] }
   ];
 
@@ -143,7 +143,7 @@
       document.getElementById('startModal').style.display = 'flex';
     } else {
       state.totalCorrect = parseInt(localStorage.getItem(DB_KEY_SCORE) || 0);
-      document.getElementById('displayName').textContent = savedName + " 殿";
+      document.getElementById('displayName').textContent = savedName + " さん";
       forceGenerateButtons(); // 順番通りに生成
       nextQuestion();
       updateUI();
