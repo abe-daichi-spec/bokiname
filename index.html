@@ -129,7 +129,7 @@
     { cat: "成長性", name: "売上高成長率", formula: ["（", "当期売上高", "－", "前期売上高", "）", "÷", "前期売上高", "×100"] },
     { cat: "効率性", name: "売上原価率", formula: ["売上原価", "÷", "売上高", "×100"] },
     { cat: "効率性", name: "売上債権回転率", formula: ["売上高", "÷", "（", "受取手形", "＋", "売掛金", "）"] },
-    { cat: "効率性", name: "商品回転率", formula: ["売上高", "÷", "商品"] },
+    { cat: "効率性", name: "商品回転率", formula: ["売上原価", "÷", "商品"] },
     { cat: "効率性", name: "総資本回転率", formula: ["売上高", "÷", "総資本"] }
   ];
 
@@ -157,7 +157,7 @@
         state.name = savedName;
         state.totalCorrect = parseInt(localStorage.getItem('ratioRPG_score') || 0);
         state.mistakes = JSON.parse(localStorage.getItem('ratioRPG_mistakes') || "[]");
-        document.getElementById('displayName').textContent = state.name + " 殿";
+        document.getElementById('displayName').textContent = state.name + " さん";
         generateButtons(); // 関数名を新しいものに変更
         nextQuestion(); 
         updateUI();
